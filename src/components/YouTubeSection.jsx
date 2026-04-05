@@ -1,4 +1,5 @@
-import { Youtube, Clock, Users, Play, Loader2, ExternalLink } from 'lucide-react'
+import { Youtube, Clock, Users, Play, ExternalLink } from 'lucide-react'
+import DataStatus from './DataStatus'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -25,7 +26,7 @@ const TooltipStyle = ({ active, payload, label }) => {
 }
 
 export default function YouTubeSection() {
-  const { data: yt, loading, error } = useYouTube()
+  const { data: yt, loading, error, lastTs, isFresh, refresh } = useYouTube()
 
   // Dados reais quando disponíveis, senão usa mock
   const subscribers  = yt?.subscribers    ?? youtubeStats.subscribers
@@ -45,16 +46,14 @@ export default function YouTubeSection() {
         color="text-red-400"
       />
 
-      {loading && import.meta.env.VITE_YOUTUBE_API_KEY && (
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-          <Loader2 size={14} className="animate-spin" /> Conectando YouTube...
-        </div>
-      )}
-      {error && (
-        <div className="text-xs text-red-400 bg-red-900/20 border border-red-900/30 rounded-lg px-3 py-2 mb-4">
-          Erro YouTube API: {error}
-        </div>
-      )}
+      <DataStatus
+        loading={loading}
+        error={error}
+        lastTs={lastTs}
+        isFresh={isFresh}
+        onRefresh={refresh}
+        label="YouTube"
+      />
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
