@@ -4,9 +4,11 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts'
 import SectionHeading from './SectionHeading'
-import { tiktokStats, tiktokWeekly } from '../data/mockData'
+import EditableField from './EditableField'
+import { useData } from '../context/DataContext'
+import { tiktokWeekly } from '../data/mockData'
 
-function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
+function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n) }
 
 const TooltipStyle = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -23,24 +25,92 @@ const TooltipStyle = ({ active, payload, label }) => {
 }
 
 export default function TikTokSection() {
+  const { data, editMode, update } = useData()
+  const tt = data.tiktok
+
   return (
     <section>
-      <SectionHeading icon={Music2} title={`TikTok — ${tiktokStats.handle}`} badge="via Metricool" color="text-cyan-400" />
+      <SectionHeading icon={Music2} title={`TikTok — @saudeinfo`} badge="via Metricool" color="text-cyan-400" />
+
+      {editMode && (
+        <p className="text-xs text-brand-400 bg-brand-900/20 border border-brand-800/30 rounded-lg px-3 py-2 mb-4">
+          Clique em qualquer número para editar. Fonte: Metricool → TikTok → Resumo.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Seguidores', value: fmt(tiktokStats.followers), sub: `+${tiktokStats.followersGrowth}% esta semana`, icon: TrendingUp, color: 'text-cyan-400' },
-          { label: 'Views (30 dias)', value: fmt(tiktokStats.views30d), sub: `${fmt(tiktokStats.avgVideoViews)} por vídeo`, icon: Eye, color: 'text-blue-400' },
-          { label: 'Curtidas totais', value: fmt(tiktokStats.likes), sub: `${tiktokStats.videosPosted} vídeos`, icon: Heart, color: 'text-pink-400' },
-          { label: 'Engajamento', value: `${tiktokStats.engagement}%`, sub: 'média por vídeo', icon: TrendingUp, color: 'text-emerald-400' },
+          {
+            label: 'Seguidores',
+            field: 'followers',
+            value: tt.followers,
+            format: fmt,
+            sub: null,
+            subField: 'followersGrowth',
+            subFormat: v => `${v > 0 ? '+' : ''}${v}% esta semana`,
+            subStep: 0.1,
+            icon: TrendingUp,
+            color: 'text-cyan-400',
+          },
+          {
+            label: 'Views (30 dias)',
+            field: 'views30d',
+            value: tt.views30d,
+            format: fmt,
+            sub: null,
+            subField: 'avgVideoViews',
+            subFormat: v => `${fmt(v)} por vídeo`,
+            icon: Eye,
+            color: 'text-blue-400',
+          },
+          {
+            label: 'Curtidas totais',
+            field: 'likes',
+            value: tt.likes,
+            format: fmt,
+            sub: null,
+            subField: 'videosPosted',
+            subFormat: v => `${v} vídeos`,
+            icon: Heart,
+            color: 'text-pink-400',
+          },
+          {
+            label: 'Engajamento',
+            field: 'engagement',
+            value: tt.engagement,
+            format: v => `${v}%`,
+            step: 0.1,
+            sub: 'média por vídeo',
+            subField: null,
+            icon: TrendingUp,
+            color: 'text-emerald-400',
+          },
         ].map(k => (
           <div key={k.label} className="card">
             <div className="flex items-center justify-between mb-3">
               <span className="stat-label">{k.label}</span>
               <k.icon size={14} className={k.color} />
             </div>
-            <p className="text-xl font-bold text-white">{k.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{k.sub}</p>
+            <EditableField
+              value={k.value}
+              onChange={v => update('tiktok', k.field, v)}
+              format={k.format}
+              step={k.step ?? 1}
+              label={k.label}
+              className="text-xl font-bold text-white"
+            />
+            {k.subField ? (
+              <EditableField
+                value={tt[k.subField]}
+                onChange={v => update('tiktok', k.subField, v)}
+                format={k.subFormat}
+                step={k.subStep ?? 1}
+                label={k.subField}
+                className="text-xs text-gray-500 mt-0.5"
+              />
+            ) : (
+              <p className="text-xs text-gray-500 mt-0.5">{k.sub}</p>
+            )}
           </div>
         ))}
       </div>

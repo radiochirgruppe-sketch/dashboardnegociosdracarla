@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DataProvider } from './context/DataContext'
 import Header from './components/Header'
 import OverviewKPIs from './components/OverviewKPIs'
 import InstagramSection from './components/InstagramSection'
@@ -11,17 +12,17 @@ import StatusTable from './components/StatusTable'
 import NextSteps from './components/NextSteps'
 
 const NAV = [
-  { id: 'instagram',   label: 'Instagram' },
-  { id: 'youtube',     label: 'YouTube' },
-  { id: 'tiktok',      label: 'TikTok' },
-  { id: 'newsletter',  label: 'Newsletter' },
-  { id: 'shopee',      label: 'Shopee' },
-  { id: 'metaads',     label: 'Meta Ads' },
-  { id: 'status',      label: 'Automações' },
-  { id: 'nextsteps',   label: 'Próximos Passos' },
+  { id: 'instagram',  label: 'Instagram' },
+  { id: 'youtube',    label: 'YouTube' },
+  { id: 'tiktok',     label: 'TikTok' },
+  { id: 'newsletter', label: 'Newsletter' },
+  { id: 'shopee',     label: 'Shopee' },
+  { id: 'metaads',    label: 'Meta Ads' },
+  { id: 'status',     label: 'Automações' },
+  { id: 'nextsteps',  label: 'Próximos Passos' },
 ]
 
-export default function App() {
+function Dashboard() {
   const [active, setActive] = useState(null)
 
   const scrollTo = (id) => {
@@ -57,62 +58,39 @@ export default function App() {
       {/* Main content */}
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
-        {/* Overview row */}
         <div>
           <h2 className="text-xs uppercase tracking-widest text-gray-600 mb-4">Visão Geral — Todos os canais</h2>
           <OverviewKPIs />
         </div>
 
-        <div id="instagram">
-          <InstagramSection />
-        </div>
-
+        <div id="instagram"><InstagramSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="youtube">
-          <YouTubeSection />
-        </div>
-
+        <div id="youtube"><YouTubeSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="tiktok">
-          <TikTokSection />
-        </div>
-
+        <div id="tiktok"><TikTokSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="newsletter">
-          <NewsletterSection />
-        </div>
-
+        <div id="newsletter"><NewsletterSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="shopee">
-          <ShopeeSection />
-        </div>
-
+        <div id="shopee"><ShopeeSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="metaads">
-          <MetaAdsSection />
-        </div>
-
+        <div id="metaads"><MetaAdsSection /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="status">
-          <StatusTable />
-        </div>
-
+        <div id="status"><StatusTable /></div>
         <div className="border-t border-gray-800/60" />
-
-        <div id="nextsteps">
-          <NextSteps />
-        </div>
+        <div id="nextsteps"><NextSteps /></div>
 
         <footer className="pt-4 pb-8 text-center text-xs text-gray-700">
           Dashboard — Ecossistema Dra. Carla Menini · Atualizado Abr/2026 · Dados via Metricool + Analytics
         </footer>
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <DataProvider>
+      <Dashboard />
+    </DataProvider>
   )
 }

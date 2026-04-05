@@ -1,11 +1,13 @@
-import { Instagram, Users, TrendingUp, Eye } from 'lucide-react'
+import { Instagram, TrendingUp, Eye } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import SectionHeading from './SectionHeading'
-import { instagramProfiles, instagramWeeklyReach } from '../data/mockData'
+import EditableField from './EditableField'
+import { useData } from '../context/DataContext'
+import { instagramWeeklyReach } from '../data/mockData'
 
-function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
+function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n) }
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -22,31 +24,93 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function InstagramSection() {
+  const { data, editMode, updateIG } = useData()
+  const profiles = data.instagram
+
   return (
     <section>
       <SectionHeading icon={Instagram} title="Instagram — 4 Perfis" badge="via Metricool" color="text-pink-400" />
 
+      {editMode && (
+        <p className="text-xs text-brand-400 bg-brand-900/20 border border-brand-800/30 rounded-lg px-3 py-2 mb-4">
+          Clique em qualquer número para editar. Fonte: Metricool → Analytics → exportar relatório.
+        </p>
+      )}
+
       {/* Profile cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        {instagramProfiles.map(p => (
+        {profiles.map((p, i) => (
           <div key={p.handle} className="card flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono text-gray-400">{p.handle}</span>
               <span className="inline-block w-2 h-2 rounded-full" style={{ background: p.color }} />
             </div>
-            <p className="text-lg font-bold text-white">{fmt(p.followers)}</p>
-            <p className="text-xs text-gray-500 -mt-2">seguidores</p>
+
+            <div>
+              <EditableField
+                value={p.followers}
+                onChange={v => updateIG(i, 'followers', v)}
+                format={fmt}
+                label={`${p.handle} seguidores`}
+                className="text-lg font-bold text-white"
+              />
+              <p className="text-xs text-gray-500 -mt-0.5">seguidores</p>
+            </div>
+
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-500">Alcance</span>
-              <span className="text-gray-300">{fmt(p.reach)}</span>
+              <EditableField
+                value={p.reach}
+                onChange={v => updateIG(i, 'reach', v)}
+                format={fmt}
+                label={`${p.handle} alcance`}
+                className="text-gray-300"
+              />
             </div>
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Impressões</span>
+              <EditableField
+                value={p.impressions}
+                onChange={v => updateIG(i, 'impressions', v)}
+                format={fmt}
+                label={`${p.handle} impressões`}
+                className="text-gray-300"
+              />
+            </div>
+
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-500">Engaj.</span>
-              <span className="text-gray-300">{p.engagement}%</span>
+              <EditableField
+                value={p.engagement}
+                onChange={v => updateIG(i, 'engagement', v)}
+                format={v => `${v}%`}
+                step={0.1}
+                label={`${p.handle} engajamento`}
+                className="text-gray-300"
+              />
             </div>
-            <div className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
-              <TrendingUp size={11} />
-              +{p.followersGrowth}% esta semana
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Posts/mês</span>
+              <EditableField
+                value={p.postsThisMonth}
+                onChange={v => updateIG(i, 'postsThisMonth', v)}
+                label={`${p.handle} posts`}
+                className="text-gray-300"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 text-xs font-medium">
+              <TrendingUp size={11} className={p.followersGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+              <EditableField
+                value={p.followersGrowth}
+                onChange={v => updateIG(i, 'followersGrowth', v)}
+                format={v => `${v > 0 ? '+' : ''}${v}% esta semana`}
+                step={0.1}
+                label={`${p.handle} crescimento`}
+                className={p.followersGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}
+              />
             </div>
           </div>
         ))}
@@ -64,7 +128,7 @@ export default function InstagramSection() {
             <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={fmt} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11, color: '#9ca3af' }} />
-            {instagramProfiles.map(p => (
+            {profiles.map(p => (
               <Line
                 key={p.handle}
                 type="monotone"
@@ -96,7 +160,7 @@ export default function InstagramSection() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {instagramProfiles.map(p => (
+              {profiles.map(p => (
                 <tr key={p.handle} className="text-gray-300">
                   <td className="py-2">
                     <span className="font-mono" style={{ color: p.color }}>{p.handle}</span>

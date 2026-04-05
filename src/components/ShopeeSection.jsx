@@ -4,10 +4,12 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts'
 import SectionHeading from './SectionHeading'
-import { shopeeStats, shopeeWeekly } from '../data/mockData'
+import EditableField from './EditableField'
+import { useData } from '../context/DataContext'
+import { shopeeWeekly } from '../data/mockData'
 
-function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
-function brl(n) { return `R$ ${n.toFixed(2).replace('.', ',')}` }
+function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n) }
+function brl(n) { return `R$ ${Number(n).toFixed(2).replace('.', ',')}` }
 
 const TooltipStyle = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -24,39 +26,107 @@ const TooltipStyle = ({ active, payload, label }) => {
 }
 
 export default function ShopeeSection() {
+  const { data, editMode, update } = useData()
+  const s = data.shopee
+
   return (
     <section>
       <SectionHeading icon={ShoppingBag} title="Shopee Afiliados" badge="Telegram + Instagram" color="text-orange-400" />
 
+      {editMode && (
+        <p className="text-xs text-brand-400 bg-brand-900/20 border border-brand-800/30 rounded-lg px-3 py-2 mb-4">
+          Clique em qualquer número para editar. Fonte: painel Shopee Afiliados + contagem manual do Telegram.
+        </p>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Membros Telegram', value: shopeeStats.telegramMembers, sub: `+${shopeeStats.telegramMembersGrowth}% esta semana`, icon: Users, color: 'text-blue-400' },
-          { label: 'Cliques no mês', value: shopeeStats.clicksThisMonth.toLocaleString('pt-BR'), sub: `${shopeeStats.topProductClicks} no top produto`, icon: MousePointer, color: 'text-orange-400' },
-          { label: 'Conversões', value: shopeeStats.conversions, sub: `${shopeeStats.conversionRate}% de conversão`, icon: TrendingUp, color: 'text-emerald-400' },
-          { label: 'Comissão total', value: brl(shopeeStats.commissionTotal), sub: `${brl(shopeeStats.commissionThisMonth)} este mês`, icon: DollarSign, color: 'text-yellow-400' },
+          {
+            label: 'Membros Telegram',
+            field: 'telegramMembers',
+            value: s.telegramMembers,
+            format: v => String(v),
+            subField: 'telegramMembersGrowth',
+            subFormat: v => `+${v}% esta semana`,
+            subStep: 0.1,
+            icon: Users,
+            color: 'text-blue-400',
+          },
+          {
+            label: 'Cliques no mês',
+            field: 'clicksThisMonth',
+            value: s.clicksThisMonth,
+            format: v => v.toLocaleString('pt-BR'),
+            subField: 'topProductClicks',
+            subFormat: v => `${v} no top produto`,
+            icon: MousePointer,
+            color: 'text-orange-400',
+          },
+          {
+            label: 'Conversões',
+            field: 'conversions',
+            value: s.conversions,
+            format: v => String(v),
+            subField: 'conversionRate',
+            subFormat: v => `${v}% de conversão`,
+            subStep: 0.1,
+            icon: TrendingUp,
+            color: 'text-emerald-400',
+          },
+          {
+            label: 'Comissão total',
+            field: 'commissionTotal',
+            value: s.commissionTotal,
+            format: brl,
+            step: 0.01,
+            subField: 'commissionThisMonth',
+            subFormat: v => `${brl(v)} este mês`,
+            subStep: 0.01,
+            icon: DollarSign,
+            color: 'text-yellow-400',
+          },
         ].map(k => (
           <div key={k.label} className="card">
             <div className="flex items-center justify-between mb-3">
               <span className="stat-label">{k.label}</span>
               <k.icon size={14} className={k.color} />
             </div>
-            <p className="text-xl font-bold text-white">{k.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{k.sub}</p>
+            <EditableField
+              value={k.value}
+              onChange={v => update('shopee', k.field, v)}
+              format={k.format}
+              step={k.step ?? 1}
+              label={k.label}
+              className="text-xl font-bold text-white"
+            />
+            <EditableField
+              value={s[k.subField]}
+              onChange={v => update('shopee', k.subField, v)}
+              format={k.subFormat}
+              step={k.subStep ?? 1}
+              label={k.subField}
+              className="text-xs text-gray-500 mt-0.5"
+            />
           </div>
         ))}
       </div>
 
-      {/* Top product callout */}
+      {/* Top product */}
       <div className="card mb-4 flex items-center gap-4 bg-orange-950/20 border-orange-900/30">
         <div className="w-10 h-10 rounded-xl bg-orange-900/40 flex items-center justify-center flex-shrink-0">
           <ShoppingBag size={18} className="text-orange-400" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-xs text-gray-500">Produto mais clicado</p>
-          <p className="text-sm font-semibold text-white">{shopeeStats.topProductName}</p>
+          <p className="text-sm font-semibold text-white">{s.topProductName}</p>
         </div>
-        <div className="ml-auto text-right">
-          <p className="text-xl font-bold text-orange-400">{shopeeStats.topProductClicks}</p>
+        <div className="text-right flex-shrink-0">
+          <EditableField
+            value={s.topProductClicks}
+            onChange={v => update('shopee', 'topProductClicks', v)}
+            label="Cliques top produto"
+            className="text-xl font-bold text-orange-400"
+          />
           <p className="text-xs text-gray-500">cliques</p>
         </div>
       </div>
