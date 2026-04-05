@@ -32,6 +32,11 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_BEEHIIV_API_KEY: ${{ secrets.VITE_BEEHIIV_API_KEY }}
+          VITE_BEEHIIV_PUBLICATION_MEDICINA: ${{ secrets.VITE_BEEHIIV_PUBLICATION_MEDICINA }}
+          VITE_BEEHIIV_PUBLICATION_DESAFIOS: ${{ secrets.VITE_BEEHIIV_PUBLICATION_DESAFIOS }}
+          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
