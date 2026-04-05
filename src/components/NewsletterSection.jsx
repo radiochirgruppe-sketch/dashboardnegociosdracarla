@@ -1,11 +1,21 @@
-import { Mail, Zap, MousePointer, Users } from 'lucide-react'
+import { Mail, Zap, Loader2 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
 import SectionHeading from './SectionHeading'
 import ProgressBar from './ProgressBar'
-import { newsletters, newsletterWeekly } from '../data/mockData'
+import { newsletters as mockNewsletters, newsletterWeekly } from '../data/mockData'
+import { useBeehiiv } from '../hooks/useBeehiiv'
+
+// ─── Coloque aqui os IDs reais das suas newsletters ───────────────
+// Obtenha rodando:
+//   curl https://api.beehiiv.com/v2/publications \
+//     -H "Authorization: Bearer SEU_TOKEN"
+const PUB_IDS = [
+  // { id: 'pub_XXXXXXXX', name: 'Medicina Simbólica' },
+  // { id: 'pub_YYYYYYYY', name: 'Desafios Online' },
+]
 
 function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
 
@@ -24,9 +34,31 @@ const TooltipStyle = ({ active, payload, label }) => {
 }
 
 export default function NewsletterSection() {
+  const { data: realData, loading, error } = useBeehiiv(PUB_IDS)
+
+  // Usa dados reais se disponíveis, senão usa mock
+  const newsletters = (realData && realData.length > 0) ? realData : mockNewsletters
+  const isReal      = realData && realData.length > 0
+
   return (
     <section>
-      <SectionHeading icon={Mail} title="Newsletter — Beehiiv" badge="2 newsletters ativas" color="text-yellow-400" />
+      <SectionHeading
+        icon={Mail}
+        title="Newsletter — Beehiiv"
+        badge={isReal ? 'dados reais ✓' : '2 newsletters ativas'}
+        color="text-yellow-400"
+      />
+
+      {loading && PUB_IDS.length > 0 && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Loader2 size={14} className="animate-spin" /> Buscando dados do Beehiiv...
+        </div>
+      )}
+      {error && (
+        <div className="text-xs text-red-400 bg-red-900/20 border border-red-900/30 rounded-lg px-3 py-2 mb-4">
+          Erro ao conectar Beehiiv: {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
         {newsletters.map(nl => (
