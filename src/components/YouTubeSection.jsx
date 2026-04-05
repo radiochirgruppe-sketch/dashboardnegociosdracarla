@@ -1,4 +1,4 @@
-import { Youtube, Clock, Users, Play } from 'lucide-react'
+import { Youtube, Clock, Users, Play, Loader2, ExternalLink } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -6,6 +6,7 @@ import {
 import SectionHeading from './SectionHeading'
 import ProgressBar from './ProgressBar'
 import { youtubeStats, youtubeWeekly, youtubePlaylists } from '../data/mockData'
+import { useYouTube, CHANNEL_ID } from '../hooks/useYouTube'
 
 function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
 
@@ -24,20 +25,68 @@ const TooltipStyle = ({ active, payload, label }) => {
 }
 
 export default function YouTubeSection() {
-  const { subscribers, subscribersGoal, watchHours, watchHoursGoal } = youtubeStats
+  const { data: yt, loading, error } = useYouTube()
+
+  // Dados reais quando disponíveis, senão usa mock
+  const subscribers  = yt?.subscribers    ?? youtubeStats.subscribers
+  const totalViews   = yt?.totalViews     ?? youtubeStats.totalViews
+  const videoCount   = yt?.videoCount     ?? youtubeStats.videosPublished
+  const isReal       = !!yt
+
+  const { subscribersGoal, watchHours, watchHoursGoal } = youtubeStats
   const yppPct = Math.round(((subscribers / subscribersGoal) + (watchHours / watchHoursGoal)) / 2 * 100)
 
   return (
     <section>
-      <SectionHeading icon={Youtube} title="YouTube — Medicina Simbólica" badge="YPP em andamento" color="text-red-400" />
+      <SectionHeading
+        icon={Youtube}
+        title="YouTube — Medicina Simbólica"
+        badge={isReal ? 'dados reais ✓' : 'YPP em andamento'}
+        color="text-red-400"
+      />
+
+      {loading && import.meta.env.VITE_YOUTUBE_API_KEY && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Loader2 size={14} className="animate-spin" /> Conectando YouTube...
+        </div>
+      )}
+      {error && (
+        <div className="text-xs text-red-400 bg-red-900/20 border border-red-900/30 rounded-lg px-3 py-2 mb-4">
+          Erro YouTube API: {error}
+        </div>
+      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Inscritos', value: youtubeStats.subscribers.toLocaleString('pt-BR'), icon: Users, color: 'text-red-400' },
-          { label: 'Horas assistidas (12m)', value: youtubeStats.watchHours.toLocaleString('pt-BR'), icon: Clock, color: 'text-orange-400' },
-          { label: 'Visualizações totais', value: fmt(youtubeStats.totalViews), icon: Play, color: 'text-yellow-400' },
-          { label: 'Duração média', value: youtubeStats.avgViewDuration, icon: Clock, color: 'text-green-400' },
+          {
+            label: 'Inscritos',
+            value: subscribers.toLocaleString('pt-BR'),
+            real: isReal,
+            icon: Users,
+            color: 'text-red-400',
+          },
+          {
+            label: 'Horas assistidas (12m)',
+            value: watchHours.toLocaleString('pt-BR'),
+            real: false, // requer YouTube Analytics OAuth
+            icon: Clock,
+            color: 'text-orange-400',
+          },
+          {
+            label: 'Visualizações totais',
+            value: fmt(totalViews),
+            real: isReal,
+            icon: Play,
+            color: 'text-yellow-400',
+          },
+          {
+            label: 'Vídeos publicados',
+            value: videoCount.toLocaleString('pt-BR'),
+            real: isReal,
+            icon: Clock,
+            color: 'text-green-400',
+          },
         ].map(k => (
           <div key={k.label} className="card">
             <div className="flex items-center justify-between mb-3">
@@ -45,8 +94,23 @@ export default function YouTubeSection() {
               <k.icon size={14} className={k.color} />
             </div>
             <p className="text-xl font-bold text-white">{k.value}</p>
+            {!k.real && (
+              <p className="text-xs text-gray-600 mt-0.5">estimado</p>
+            )}
           </div>
         ))}
+      </div>
+
+      {/* Canal link */}
+      <div className="mb-5">
+        <a
+          href={`https://www.youtube.com/channel/${CHANNEL_ID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
+        >
+          <ExternalLink size={11} /> Ver canal no YouTube
+        </a>
       </div>
 
       {/* YPP Progress */}
@@ -71,12 +135,42 @@ export default function YouTubeSection() {
             color="bg-orange-500"
           />
         </div>
+        <p className="text-xs text-gray-600 mt-3">
+          * Horas assistidas requerem YouTube Analytics (OAuth) — valor estimado.
+        </p>
       </div>
+
+      {/* Vídeos recentes (só aparece quando API real está conectada) */}
+      {isReal && yt.recentVideos?.length > 0 && (
+        <div className="card mb-4">
+          <p className="text-sm font-medium text-gray-300 mb-3">Últimos vídeos publicados</p>
+          <div className="space-y-2">
+            {yt.recentVideos.slice(0, 5).map(v => (
+              <a
+                key={v.id}
+                href={`https://www.youtube.com/watch?v=${v.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between text-xs p-2 rounded-lg hover:bg-gray-800/60 transition-colors group"
+              >
+                <span className="text-gray-300 truncate max-w-[65%] group-hover:text-white">
+                  {v.title}
+                </span>
+                <div className="flex items-center gap-3 text-gray-500 flex-shrink-0">
+                  <span>{fmt(v.views)} views</span>
+                  <span>{v.publishedAt}</span>
+                  <ExternalLink size={10} className="opacity-0 group-hover:opacity-100" />
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <div className="card">
-          <p className="text-sm font-medium text-gray-300 mb-4">Inscritos + Horas (semanal)</p>
+          <p className="text-sm font-medium text-gray-300 mb-4">Inscritos + Horas (semanal — estimado)</p>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={youtubeWeekly} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <defs>
@@ -101,7 +195,7 @@ export default function YouTubeSection() {
         </div>
 
         <div className="card">
-          <p className="text-sm font-medium text-gray-300 mb-4">Visualizações semanais</p>
+          <p className="text-sm font-medium text-gray-300 mb-4">Visualizações semanais (estimado)</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={youtubeWeekly} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />

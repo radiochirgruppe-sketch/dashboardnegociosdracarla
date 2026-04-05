@@ -1,22 +1,25 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// Mock data — substituir pelos valores reais das APIs (Metricool, Google
-// Analytics, Beehiiv, Shopee, Meta Ads) quando as integrações estiverem prontas.
+// DADOS MANUAIS — atualize os números abaixo com os valores reais do Metricool
+// Fontes: Metricool → Analytics → exportar relatório mensal
+// Última atualização: Abril 2026
 // ──────────────────────────────────────────────────────────────────────────────
 
 // Últimas 8 semanas (eixo X para todos os gráficos de tendência)
 export const weeks = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8']
 
 // ─── Instagram ────────────────────────────────────────────────────────────────
+// ATUALIZAR MENSALMENTE com dados do Metricool:
+//   Metricool → Instagram → Resumo → copiar seguidores, alcance, engajamento
 export const instagramProfiles = [
   {
     handle: '@radiochir',
     niche: 'Medicina Simbólica / Saúde',
-    followers: 8_420,
-    followersGrowth: +3.2,
-    reach: 24_800,
-    impressions: 51_300,
-    engagement: 4.7,
-    postsThisMonth: 28,
+    followers: 8_420,       // ← atualizar
+    followersGrowth: +3.2,  // ← % crescimento vs semana anterior
+    reach: 24_800,          // ← alcance médio semanal
+    impressions: 51_300,    // ← impressões do mês
+    engagement: 4.7,        // ← taxa de engajamento %
+    postsThisMonth: 28,     // ← posts publicados no mês
     color: '#a855f7',
     trend: [5200, 5900, 6400, 6800, 7100, 7600, 8000, 8420],
   },
