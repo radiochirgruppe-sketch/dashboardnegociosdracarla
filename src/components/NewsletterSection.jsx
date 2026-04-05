@@ -13,8 +13,8 @@ import { useBeehiiv } from '../hooks/useBeehiiv'
 //   curl https://api.beehiiv.com/v2/publications \
 //     -H "Authorization: Bearer SEU_TOKEN"
 const PUB_IDS = [
-  // { id: 'pub_XXXXXXXX', name: 'Medicina Simbólica' },
-  // { id: 'pub_YYYYYYYY', name: 'Desafios Online' },
+  { id: 'pub_217528d9-9240-4480-867b-cc148538f37a', name: 'Medicina Simbólica' },
+  { id: 'pub_212ca56c-5e06-4112-8201-41a53b81b5bb', name: 'Desafios Online' },
 ]
 
 function fmt(n) { return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n }
